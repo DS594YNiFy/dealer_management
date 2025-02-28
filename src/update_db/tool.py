@@ -1,6 +1,7 @@
 import yaml
 import pymysql
 import logging
+import re
 
 
 class MySQLDatabase:
@@ -75,9 +76,13 @@ def get_mysql_connection():
 
 
 def replace_col_names(table_name, columns_str):
+    """将中文列名改为英文列名"""
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
-    replacements = config["update_" + table_name]["replacements"]
+    if re.compile(r"so|d365_si").search(table_name):
+        replacements = config["update_" + table_name]["replacements"]
+    else:
+        replacements = config["update_model"]["replacements"]
     for chinese_name, english_name in replacements.items():
         columns_str = columns_str.replace(chinese_name, english_name)
     return columns_str
