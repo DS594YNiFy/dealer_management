@@ -74,10 +74,10 @@ def get_mysql_connection():
     return mysql_db
 
 
-def replace_col_names(columns_str):
+def replace_col_names(table_name, columns_str):
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
-    replacements = config["update_model"]["replacements"]
+    replacements = config["update_" + table_name]["replacements"]
     for chinese_name, english_name in replacements.items():
         columns_str = columns_str.replace(chinese_name, english_name)
     return columns_str
@@ -88,10 +88,12 @@ def full_update_table(table_name, pd_data):
     logging.info(f"{table_name}")
     mysql_db = get_mysql_connection()
     truncate_query = f"TRUNCATE TABLE {table_name};"
-    columns_str = ', '.join([f'{col}' for col in pd_data.columns])
-    columns_str = replace_col_names(columns_str)
-    values_placeholder = ', '.join(['%s'] * len(pd_data.columns))
-    insert_query = f'INSERT INTO {table_name} ({columns_str}) VALUES ({values_placeholder})'
+    columns_str = ", ".join([f"{col}" for col in pd_data.columns])
+    columns_str = replace_col_names(table_name, columns_str)
+    values_placeholder = ", ".join(["%s"] * len(pd_data.columns))
+    insert_query = (
+        f"INSERT INTO {table_name} ({columns_str}) VALUES ({values_placeholder})"
+    )
     insert_params = [tuple(row) for row in pd_data.values]
     mysql_db.execute_query(truncate_query)
     mysql_db.execute_query(insert_query, insert_params)

@@ -13,8 +13,8 @@ def load_data_dict():
     model_dict = {}
     try:
         for m in model_list:
-            df = pd.read_csv(folder_path + m + ".csv")
-            model_dict[m] = df.where(pd.notna(df), None)
+            csv_df = pd.read_csv(folder_path + m + ".csv")
+            model_dict[m] = csv_df.where(pd.notna(csv_df), None)
         return model_dict
     except:
         logging.error("load model")
