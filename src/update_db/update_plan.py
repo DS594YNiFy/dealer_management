@@ -8,8 +8,8 @@ def load_data_dict():
     """获取 csv 数据"""
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
-    folder_path = config["update_model"]["folder_path"]
-    csv_list = config["update_model"]["table_list"]
+    folder_path = config["update_"+update_table]["folder_path"]
+    csv_list = config["update_"+update_table]["table_list"]
     csv_dict = {}
     try:
         for m in csv_list:
@@ -17,7 +17,7 @@ def load_data_dict():
             csv_dict[m] = csv_df.where(pd.notna(csv_df), None)
         return csv_dict
     except:
-        logging.error("load model")
+        logging.error("load plan")
 
 
 def check_data():
@@ -26,26 +26,29 @@ def check_data():
     return True
 
 
-def update_model():
-    """将 data/model/ 中的数据全量更新到数据库"""
-    logging.info("python src/update_db/update_model.py")
-    model_dict = load_data_dict()
+def update_plan():
+    """将 data/plan/ 中的数据全量更新到数据库"""
+    logging.info("python src/update_db/update_plan.py")
+    plan_dict = load_data_dict()
     if check_data():
-        for k, v in model_dict.items():
+        for k, v in plan_dict.items():
             full_update_table(k,v)
-        logging.info("update_model.py run successfully")
+        logging.info("update_plan.py run successfully")
     else:
-        logging.error("check './data/model/*.csv'")
+        logging.error("check './data/plan/*.csv'")
 
 
 def main():
     logging.basicConfig(
-        filename="logs/update_model.log",
+        filename="logs/update_" + update_table + ".log",
         format="%(asctime)s %(levelname)s: %(message)s",
         level=logging.DEBUG,
     )
-    update_model()
+    update_plan()
 
 
 if __name__ == "__main__":
+    update_table = "plan"
+    update_method = "incremental"
+    update_method = "full"
     main()
