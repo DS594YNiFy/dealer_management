@@ -16,8 +16,9 @@ def load_data_dict():
             csv_df = pd.read_csv(folder_path + m + ".csv")
             csv_dict[m] = csv_df.where(pd.notna(csv_df), None)
         return csv_dict
-    except:
+    except Exception as e:
         logging.error("load model")
+        logging.error(e)
 
 
 def check_data():

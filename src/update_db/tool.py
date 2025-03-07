@@ -39,18 +39,25 @@ class MySQLDatabase:
             if params and isinstance(params[0], tuple):
                 rows_affected = self.cursor.executemany(query, params)
                 logging.info(f"rows_affected: {rows_affected}")
-            else:
+                self.connection.commit()
+                return self.cursor.rowcount
+            elif params:
                 self.cursor.execute(query, params)
-            if query.strip().lower().startswith("select"):
+                self.connection.commit()
+                return self.cursor.rowcount
+            elif query.strip().lower().startswith("select"):
+                self.cursor.execute(query)
                 result = self.cursor.fetchall()
                 return result
             else:
+                self.cursor.execute(query)
                 self.connection.commit()
                 return self.cursor.rowcount
         except pymysql.Error as e:
+            self.connection.rollback()
             logging.error("error while executing:\n" + query)
             logging.error(e)
-            self.connection.rollback()
+            return None
 
     def close(self):
         """关闭 MySQL 数据库连接"""
