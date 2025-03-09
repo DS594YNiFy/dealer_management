@@ -100,14 +100,18 @@ def replace_col_names(table_name, columns_str):
 def full_update_table(table_name, pd_data):
     """全量更新"""
     logging.info(f"{table_name}")
-    mysql_db = get_mysql_connection()
-    truncate_query = f"TRUNCATE TABLE {table_name};"
-    columns_str = ", ".join([f"{col}" for col in pd_data.columns])
-    columns_str = replace_col_names(table_name, columns_str)
-    values_placeholder = ", ".join(["%s"] * len(pd_data.columns))
-    insert_query = (
-        f"INSERT INTO {table_name} ({columns_str}) VALUES ({values_placeholder})"
-    )
-    insert_params = [tuple(row) for row in pd_data.values]
-    mysql_db.execute_query(truncate_query)
-    mysql_db.execute_query(insert_query, insert_params)
+    try:
+        mysql_db = get_mysql_connection()
+        truncate_query = f"TRUNCATE TABLE {table_name};"
+        columns_str = ", ".join([f"{col}" for col in pd_data.columns])
+        columns_str = replace_col_names(table_name, columns_str)
+        values_placeholder = ", ".join(["%s"] * len(pd_data.columns))
+        insert_query = (
+            f"INSERT INTO {table_name} ({columns_str}) VALUES ({values_placeholder})"
+        )
+        insert_params = [tuple(row) for row in pd_data.values]
+        mysql_db.execute_query(truncate_query)
+        mysql_db.execute_query(insert_query, insert_params)
+        logging.info(f"table {table_name} has been fully updated successfully")
+    except Exception as e:
+        logging.error(f"an error occurred while fully updating table {table_name}: {e}")

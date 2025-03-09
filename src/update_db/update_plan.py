@@ -12,9 +12,9 @@ def load_data_dict():
     csv_list = config["update_"+update_table]["table_list"]
     csv_dict = {}
     try:
-        for m in csv_list:
-            csv_df = pd.read_csv(folder_path + m + ".csv")
-            csv_dict[m] = csv_df.where(pd.notna(csv_df), None)
+        for c in csv_list:
+            csv_df = pd.read_csv(folder_path + c + ".csv")
+            csv_dict[c] = csv_df.where(pd.notna(csv_df), None)
         return csv_dict
     except:
         logging.error("load plan")
