@@ -1,7 +1,7 @@
-archived/
+backup/
 config/
 data/
 logs/
+reports/
 sql/
-backup/
 requirements.txt
