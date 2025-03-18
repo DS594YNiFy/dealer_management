@@ -1,23 +1,24 @@
 import logging
 import yaml
 import pandas as pd
-from tool import full_update_table
+from .base import full_update_table
 
 
 def load_data_dict():
-    """获取 model 数据"""
+    """获取 csv 数据"""
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
     folder_path = config["update_model"]["folder_path"]
-    model_list = config["update_model"]["table_list"]
-    model_dict = {}
+    csv_list = config["update_model"]["table_list"]
+    csv_dict = {}
     try:
-        for m in model_list:
+        for m in csv_list:
             csv_df = pd.read_csv(folder_path + m + ".csv")
-            model_dict[m] = csv_df.where(pd.notna(csv_df), None)
-        return model_dict
-    except:
+            csv_dict[m] = csv_df.where(pd.notna(csv_df), None)
+        return csv_dict
+    except Exception as e:
         logging.error("load model")
+        logging.error(e)
 
 
 def check_data():

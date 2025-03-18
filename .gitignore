@@ -3,4 +3,5 @@ config/
 data/
 logs/
 sql/
+backup/
 requirements.txt

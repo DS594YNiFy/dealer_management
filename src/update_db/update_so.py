@@ -1,9 +1,7 @@
 import logging
 import yaml
-import os
-import re
 import pandas as pd
-from tool import full_update_table
+from .base import full_update_table
 
 
 def load_data():
@@ -11,16 +9,6 @@ def load_data():
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
     folder_path = config["update_" + update_table]["folder_path"]
-    # pattern = r"^DynamicsExport_\d+\(1\).xlsx$"
-    # for filename in os.listdir(folder_path):
-    #     if re.match(pattern, filename):
-    #         try:
-    #             xls_df = pd.read_excel(folder_path + filename)
-    #         except Exception as e:
-    #             logging.error(f"load so: {e}")
-    #     else:
-    #         continue
-    # xls_df.to_csv(folder_path + update_table + "_2.csv", index=False, encoding='utf-8-sig')
     csv_df = pd.read_csv(folder_path + update_table + "_2.csv")
     df = csv_df.where(pd.notna(csv_df), None)
     return df
