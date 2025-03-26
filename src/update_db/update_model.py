@@ -1,7 +1,7 @@
 import logging
 import yaml
 import pandas as pd
-from .base import full_update_table
+from base import full_update_table
 
 
 def load_data_dict():

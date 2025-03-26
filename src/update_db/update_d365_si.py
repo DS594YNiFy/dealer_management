@@ -3,7 +3,7 @@ import yaml
 import os
 import re
 import pandas as pd
-from .base import full_update_table
+from base import full_update_table
 
 
 def load_data():
@@ -22,8 +22,12 @@ def load_data():
             continue
     xls_df.to_csv(folder_path + update_table + "_2.csv", index=False, encoding='utf-8-sig')
     csv_df = pd.read_csv(folder_path + update_table + "_2.csv")
-    df = csv_df.where(pd.notna(csv_df), None)
-    return df
+    # NOTE: nan -> none
+    for col in csv_df.columns:
+        if csv_df[col].isna().all():
+            csv_df[col] = csv_df[col].astype(object)
+    clean_df = csv_df.where(pd.notna(csv_df), None)
+    return clean_df
 
 
 def incremental_update_table(update_table):
@@ -35,11 +39,11 @@ def update_d365_si():
     logging.info("python src/update_db/update_" + update_table + ".py")
     logging.info(f"update_method: {update_method}")
     if update_method == "full":
-        csv_data = load_data()
-        full_update_table(update_table + "_2", csv_data)
+        clean_df = load_data()
+        full_update_table(update_table + "_2", clean_df)
         logging.info("update_" + update_table + ".py run successfully")
     elif update_method == "incremental":
-        # FIXME: 筛选 d365_si_2 中的数据并存入 d365_si
+        # FIXME: 筛选 d365_si_2 中的数据并存入 d365_si <- 全部全量更新
         incremental_update_table(update_table)
     else:
         logging.error("update_" + update_table + ".py run failed")

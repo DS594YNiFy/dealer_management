@@ -7,7 +7,7 @@ import os
 tool_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(tool_dir)
 
-from update_db.tool import get_mysql_connection
+from update_db.base import get_mysql_connection
 
 
 def fetch_data(select_query):
