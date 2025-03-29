@@ -17,8 +17,8 @@ def load_data():
 def data_clean(csv_data):
     """清洗 CSV 数据"""
     valid_gmv = (csv_data["gmv".upper()] != 0) & ~csv_data["gmv".upper()].isna()
-    so_data = csv_data[valid_gmv]
-    return so_data
+    clean_data = csv_data[valid_gmv]
+    return clean_data
 
 
 def incremental_update_table(update_table):
