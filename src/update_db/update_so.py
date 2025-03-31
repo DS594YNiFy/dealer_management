@@ -4,12 +4,12 @@ import pandas as pd
 from base import full_update_table
 
 
-def load_data():
+def load_data(data_method):
     """获取 csv 数据"""
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
-    folder_path = config["update_" + update_table]["folder_path"]
-    csv_df = pd.read_csv(folder_path + update_table + "_2.csv")
+    folder_path = config["update_" + data_method]["folder_path"]
+    csv_df = pd.read_csv(folder_path + update_table + ".csv")
     df = csv_df.where(pd.notna(csv_df), None)
     return df
 
@@ -21,37 +21,32 @@ def data_clean(csv_data):
     return clean_data
 
 
-def incremental_update_table(update_table):
-    return
-
-
-def update_so():
+def update_so(data_method):
     """将 data/so/ 中的数据增量或全量更新到数据库"""
     logging.info("python src/update_db/update_" + update_table + ".py")
-    logging.info(f"update_method: {update_method}")
-    if update_method == "full":
-        csv_data = load_data()
-        db_data = data_clean(csv_data)
-        full_update_table(update_table + "_2", db_data)
-        logging.info("update_" + update_table + ".py run successfully")
-    elif update_method == "incremental":
-        # FIXME: 筛选 so_2 中的数据并存入 so
-        incremental_update_table(update_table)
-    else:
-        logging.error("update_" + update_table + ".py run failed")
+    try:
+        if update_table in ["so", "so_2"]:
+            csv_data = load_data(data_method)
+            db_data = data_clean(csv_data)
+            full_update_table(update_table, db_data)
+            logging.info("update_" + data_method + ".py run successfully")
+        else:
+            logging.error(f"update_table = {update_table}, table name error")
+    except Exception as e:
+        logging.error("update_" + data_method + ".py run failed")
 
 
 def main():
+    data_method = update_table.replace("_2", "")
     logging.basicConfig(
-        filename="logs/update_" + update_table + ".log",
+        filename="logs/update_" + data_method + ".log",
         format="%(asctime)s %(levelname)s: %(message)s",
         level=logging.DEBUG,
     )
-    update_so()
+    update_so(data_method)
 
 
 if __name__ == "__main__":
     update_table = "so"
-    update_method = "incremental"
-    update_method = "full"
+    # update_table = "so_2"
     main()

@@ -87,7 +87,7 @@ def replace_col_names(table_name, columns_str):
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
     if re.compile(r"d365_si|so|qbt").search(table_name):
-        replacements = config["update_" + table_name]["replacements"]
+        replacements = config["update_" + table_name.replace("_2", "")]["replacements"]
     elif re.compile(r"plan").search(table_name):
         replacements = config["update_plan"]["replacements"]
     else:
