@@ -3,7 +3,7 @@ import yaml
 import os
 import re
 import pandas as pd
-from base import full_update_table
+from src.update_db.data_updater import full_update_table
 
 
 def load_data():
