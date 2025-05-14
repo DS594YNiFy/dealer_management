@@ -1,8 +1,7 @@
 import yaml
 import logging
-import re
 import pandas as pd
-from mysql_connector import get_mysql_connection
+from update_db.mysql_connector import get_mysql_connection
 
 
 def replace_col_names(table_name, columns_str):
@@ -38,9 +37,9 @@ def full_update_table(table_name, pd_data):
 class UpdateDBTable:
     """数据库更新"""
 
-    def __init__(self, table_name, update_method):
+    def __init__(self, table_name):
         self.table_name = table_name
-        self.update_method = update_method
+        self.data_method = table_name.replace("_2", "")
         self.file_data = pd.DataFrame()
         self.clean_data = pd.DataFrame()
 
@@ -48,7 +47,7 @@ class UpdateDBTable:
         """获取 csv 数据"""
         with open("config/config.yaml", "r", encoding="utf-8") as file:
             config = yaml.safe_load(file)
-        config_file = config["update_" + self.update_method]
+        config_file = config["update_" + self.data_method]
         file_path = config_file["folder_path"] + config_file["csv_path"]
         self.file_data = pd.read_csv(file_path, keep_default_na=False)
         return self.file_data
@@ -70,8 +69,8 @@ class UpdateDBTable:
             self.load_data()
             self.data_clean()
             full_update_table(self.table_name, self.clean_data)
-            logging.info("update_" + self.update_method + ".py run successfully")
+            logging.info("update_" + self.data_method + ".py run successfully")
         except Exception as e:
-            logging.error("update_" + self.update_method + ".py run failed")
+            logging.error("update_" + self.data_method + ".py run failed")
             logging.error(e)
 

@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from base import full_update_table
+from update_db.data_updater import UpdateDBTable
 
 
 def load_qbt_xlsx(folder_path):
@@ -65,7 +65,7 @@ def format_col(xlsx_data):
     return xlsx_data
 
 
-def load_xlsx_and_combine():
+def load_xlsx_and_combine(update_table):
     """获取 xlsx 数据, 并和并 sheet"""
     logging.info("python src/update_db/" + update_table + ".py")
     with open("config/config.yaml", "r", encoding="utf-8") as file:
@@ -84,61 +84,20 @@ def load_xlsx_and_combine():
         logging.error(f"output qbt.csv failed: {e}")
 
 
-def load_data():
-    """获取 csv 数据"""
-    with open("config/config.yaml", "r", encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    folder_path = config["update_" + update_table]["folder_path"]
-    csv_df = pd.read_csv(folder_path + update_table + "_2.csv")
-    df = csv_df.where(pd.notna(csv_df), None)
-    return df
+class UpdateDBQingBaoTong(UpdateDBTable):
+    """更新情报通数据"""
+    # FIXME
+
+    def __init__(self, table_name, update_method, update_step):
+        super().__init__(table_name, update_method)
+        self.update_step = update_step
 
 
-def data_clean(csv_data):
-    """清洗 CSV 数据"""
-    valid_gmv = (csv_data["gmv".upper()] != 0) & ~csv_data["gmv".upper()].isna()
-    clean_data = csv_data[valid_gmv]
-    return clean_data
-
-
-def incremental_update_table(update_table):
-    return
-
-
-def update_qbq():
-    """将 data/so/ 中的数据增量或全量更新到数据库"""
-    logging.info("python src/update_db/update_" + update_table + ".py")
-    logging.info(f"update_method: {update_method}")
-    if update_method == "full":
-        csv_data = load_data()
-        db_data = data_clean(csv_data)
-        full_update_table(update_table + "_2", db_data)
-        logging.info("update_" + update_table + ".py run successfully")
-    elif update_method == "incremental":
-        # FIXME: 筛选 so_2 中的数据并存入 so
-        incremental_update_table(update_table)
-    else:
-        logging.error("update_" + update_table + ".py run failed")
-
-
-def main():
-    logging.basicConfig(
-        filename="logs/update_" + update_table + ".log",
-        format="%(asctime)s %(levelname)s: %(message)s",
-        level=logging.DEBUG,
-    )
-    if step == 1:
-        load_xlsx_and_combine()
-    elif step == 2:
-        update_qbq()
-    else:
-        print("ERROR: step error")
-
-
-if __name__ == "__main__":
-    update_table = "qbt"
-    # update_method = "incremental"
-    update_method = "full"
-    step = 1
-    step = 2
-    main()
+def update_so_qingbaotong(table_name, update_method, update_step):
+    """更新情报通数据"""
+    # FIXME: 表名称 qbt -> so_qingbaotong_2
+    if update_step == 1:
+        load_xlsx_and_combine(table_name)
+    elif update_step == 2:
+        update_so_qingbaotong = UpdateDBQingBaoTong(table_name, update_method)
+        update_so_qingbaotong.update_table()
