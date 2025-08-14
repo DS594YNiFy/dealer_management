@@ -1,19 +1,16 @@
 import logging
+from update_db.update_model import update_model
 from update_db.update_si_fanruan import update_fanruan
 from update_db.update_so_qingbaotong import update_so_qingbaotong
-from update_db.update_so_sku_douyin import update_so_sku_douyin
+# from update_db.update_so_sku_douyin import update_so_sku_douyin
 
 
 def main():
     table_dict = {
+        "模型": "model", 
         "帆软": "si_fanruan_2", 
         "情报通": "so_qingbaotong_2", 
-        "23项指标": "so_metric_2", 
-        "情报通": "so_qingbaotong_2", 
-        "抖音SKU": "so_sku_douyin_2", 
-        "得物SKU": "so_sku_dewu_2", 
-        "淘宝SKU": "so_sku_taobao_2", 
-        "天猫SKU": "so_sku_tianmao_2"
+        "其他": "other"
         }
     try:
         table_name = table_dict[DATA_NAME]
@@ -29,12 +26,12 @@ def main():
     )
     logging.info("update" + table_name)
 
-    if data_method == "si_fanruan":
+    if data_method == "model":
+        update_model()
+    elif data_method == "si_fanruan":
         update_fanruan(table_name)
-    # elif data_method == "so_qingbaotong":
-    #     update_so_qingbaotong(table_name, data_method, UPDATE_STEP)
-    # elif data_method == "so_sku_douyin":
-    #     update_so_sku_douyin(table_name, data_method, UPDATE_STEP)
+    elif data_method == "so_qingbaotong":
+        update_so_qingbaotong(table_name)
     else:
         logging.error("no way to update {DATA_NAME} found")
         print(f"未找到更新 {data_method} 的方法")
@@ -43,11 +40,9 @@ def main():
 if __name__ == "__main__":
     """运行参数设置"""
 
-    # "帆软", "情报通", "23项指标", "情报通", "抖音SKU", "得物SKU", "淘宝SKU", "天猫SKU"
-    DATA_NAME = "帆软"
-    # DATA_NAME = "23项指标"
+    # "模型", "帆软", "情报通", "23项指标", "情报通", "抖音SKU", "得物SKU", "淘宝SKU", "天猫SKU"
+    # DATA_NAME = "模型"  # 模型数据存入数据库
+    # DATA_NAME = "帆软"  # 帆软数据存入数据库
+    DATA_NAME = "情报通"  # 情报通数据存入数据库
 
-    # 需要指定运行步骤: "情报通"
-    # UPDATE_STEP = 1
-    # UPDATE_STEP = 2
     main()

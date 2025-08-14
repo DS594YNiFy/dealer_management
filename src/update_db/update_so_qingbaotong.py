@@ -1,8 +1,8 @@
 import logging
 import yaml
+import pandas as pd
 import os
 import re
-import pandas as pd
 from datetime import datetime
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -65,15 +65,14 @@ def format_col(xlsx_data):
     return xlsx_data
 
 
-def load_xlsx_and_combine(update_table):
-    """获取 xlsx 数据, 并和并 sheet"""
-    logging.info("python src/update_db/" + update_table + ".py")
-    with open("config/config.yaml", "r", encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    folder_path = config["update_"+update_table]["folder_path"]
+def load_xlsx(folder_path):
     xlsx_file, date_str = load_qbt_xlsx(folder_path)
     xlsx_data = load_sheets(xlsx_file)
     xlsx_data = format_col(xlsx_data)
+    return date_str, xlsx_data
+
+
+def combine_xlsx(folder_path, date_str, xlsx_data):
     try:
         store_code = xlsx_data.iloc[:, 0].str.strip() + "_" + xlsx_data.iloc[:, 1].str.upper().str.strip()
         xlsx_data.insert(loc=0, column='店铺编码', value=store_code)
@@ -84,20 +83,97 @@ def load_xlsx_and_combine(update_table):
         logging.error(f"output qbt.csv failed: {e}")
 
 
+def unpivot_data(folder_path, date_str, data_combined):
+    """逆透视"""
+    id_vars = ['店铺编码', '平台', 'HB-店铺名称', '分类', '授权', '自营/下线', '所属经销商', '销售团队', '负责人']
+    value_vars = [col for col in data_combined.columns if col not in id_vars + ['备注']]
+    df_melted = pd.melt(data_combined,id_vars=id_vars, value_vars=value_vars, var_name='日期', value_name='GMV')
+    csv_path = folder_path + f"qbt_{date_str}_unpivoted.csv"
+    df_melted.to_csv(csv_path, index=False, encoding='utf-8-sig')
+    logging.info(f"unpivot operation completed.")
+    return df_melted
+
+
+def load_combine_unpivot_xlsx(table_name):
+    """获取 xlsx 数据, 和并 sheet, 逆透视"""
+    data_method = table_name.replace("_2", "")
+    logging.info("python src/update_db/" + data_method + ".py")
+    with open("config/config.yaml", "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+    folder_path = config["update_"+data_method]["folder_path"]
+    date_str, xlsx_data = load_xlsx(folder_path)
+    xlsx_data_combined = combine_xlsx(folder_path, date_str, xlsx_data)
+    xlsx_data_unpivotd = unpivot_data(folder_path, date_str, xlsx_data_combined)
+    return xlsx_data_unpivotd
+
+
 class UpdateDBQingBaoTong(UpdateDBTable):
     """更新情报通数据"""
-    # FIXME
-
-    def __init__(self, table_name, update_method, update_step):
-        super().__init__(table_name, update_method)
-        self.update_step = update_step
+    pass
 
 
-def update_so_qingbaotong(table_name, update_method, update_step):
+def update_so_qingbaotong(table_name):
     """更新情报通数据"""
-    # FIXME: 表名称 qbt -> so_qingbaotong_2
-    if update_step == 1:
-        load_xlsx_and_combine(table_name)
-    elif update_step == 2:
-        update_so_qingbaotong = UpdateDBQingBaoTong(table_name, update_method)
-        update_so_qingbaotong.update_table()
+    xlsx_data_unpivotd = load_combine_unpivot_xlsx(table_name)
+    update_so_qingbaotong = UpdateDBQingBaoTong(table_name)
+    update_so_qingbaotong.update_table()
+
+
+# def load_data():
+#     """获取 csv 数据"""
+#     with open("config/config.yaml", "r", encoding="utf-8") as file:
+#         config = yaml.safe_load(file)
+#     folder_path = config["update_" + update_table]["folder_path"]
+#     csv_df = pd.read_csv(folder_path + update_table + "_2.csv")
+#     df = csv_df.where(pd.notna(csv_df), None)
+#     return df
+
+
+# def data_clean(csv_data):
+#     """清洗 CSV 数据"""
+#     valid_gmv = (csv_data["gmv".upper()] != 0) & ~csv_data["gmv".upper()].isna()
+#     clean_data = csv_data[valid_gmv]
+#     return clean_data
+
+
+# def incremental_update_table(update_table):
+#     return
+
+
+# def update_qbq():
+#     """将 data/so/ 中的数据增量或全量更新到数据库"""
+#     logging.info("python src/update_db/update_" + update_table + ".py")
+#     logging.info(f"update_method: {update_method}")
+#     if update_method == "full":
+#         csv_data = load_data()
+#         db_data = data_clean(csv_data)
+#         full_update_table(update_table + "_2", db_data)
+#         logging.info("update_" + update_table + ".py run successfully")
+#     elif update_method == "incremental":
+#         # FIXME: 筛选 so_2 中的数据并存入 so
+#         incremental_update_table(update_table)
+#     else:
+#         logging.error("update_" + update_table + ".py run failed")
+
+
+# def main():
+#     logging.basicConfig(
+#         filename="logs/update_" + update_table + ".log",
+#         format="%(asctime)s %(levelname)s: %(message)s",
+#         level=logging.DEBUG,
+#     )
+#     if step == 1:
+#         load_xlsx_and_combine()
+#     elif step == 2:
+#         update_qbq()
+#     else:
+#         print("ERROR: step error")
+
+
+# if __name__ == "__main__":
+#     update_table = "qbt"
+#     # update_method = "incremental"
+#     update_method = "full"
+#     step = 1
+#     # step = 2
+#     main()

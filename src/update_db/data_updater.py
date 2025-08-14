@@ -1,6 +1,7 @@
 import yaml
 import logging
 import pandas as pd
+import re
 from update_db.mysql_connector import get_mysql_connection
 
 
@@ -8,7 +9,10 @@ def replace_col_names(table_name, columns_str):
     """将中文列名改为英文列名"""
     with open("config/config.yaml", "r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
-    replacements = config["update_" + table_name.replace("_2", "")]["replacements"]
+    if re.compile(r"si_fanruan|so_qingbaotong").search(table_name):
+        replacements = config["update_" + table_name.replace("_2", "")]["replacements"]
+    else:
+        replacements = config["update_model"]["replacements"]
     for chinese_name, english_name in replacements.items():
         columns_str = columns_str.replace(chinese_name, english_name)
     return columns_str
@@ -64,13 +68,14 @@ class UpdateDBTable:
         return self.clean_data
 
     def update_table(self):
-        """全量更新"""
+        """全量更新: 加载 -> 清洗 -> 落库"""
         try:
             self.load_data()
             self.data_clean()
+            # TODO: 优化类继承, 改为依赖注入
             full_update_table(self.table_name, self.clean_data)
             logging.info("update_" + self.data_method + ".py run successfully")
         except Exception as e:
             logging.error("update_" + self.data_method + ".py run failed")
             logging.error(e)
-
+            raise
